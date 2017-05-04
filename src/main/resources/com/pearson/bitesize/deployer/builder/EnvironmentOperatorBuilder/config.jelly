@@ -1,0 +1,29 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+
+
+  <f:entry name="type" title="Service">
+      <f:textbox field="name" name="name" value="${it.name}"/>
+  </f:entry>
+
+  <f:entry title="Component name">
+    <f:textbox field="application" name="application" value="${it.application}"/>
+  </f:entry>
+
+  <f:entry title="Component version version">
+    <f:textbox field="version" name="version" value="${it.version}"/>
+  </f:entry>
+
+  <f:section title="Advanced Installation Options">
+    <f:advanced>
+      <f:entry title="environment-operator endpoint">
+        <f:textbox field="endpoint" name="endpoint" value="${it.endpoint}"/>
+      </f:entry>
+
+      <f:entry title="environment-operator authentication token">
+        <f:textbox field="token" name="token" value="${it.token}"/>
+      </f:entry>
+
+    </f:advanced>
+  </f:section>
+</j:jelly>
