@@ -1,51 +1,68 @@
 buildscript {
-    repositories {
-      jcenter()
+  repositories {
+    jcenter()
       maven {
         url 'http://repo.jenkins-ci.org/releases/'
       }
-    }
+      maven {
+        url "https://plugins.gradle.org/m2/"
+      }
+  }
 
-    dependencies {
-      classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.22.0'
-      classpath 'org.jenkins-ci.plugins:job-dsl:1.61'
-      classpath 'org.jenkins-ci.plugins:job-dsl-core:1.61'
-    }
-}
-
-apply plugin: 'org.jenkins-ci.jpi'
-apply plugin: 'jacoco'
-apply plugin: 'codenarc'
-
-group = "org.jenkins-ci.plugins"
-version = "4.0.43-SNAPSHOT"    // Or whatever your version is.
-description = "Pearson environment-operator deployer"
-
-// sourceCompatibility = 1.6
-// targetCompatibility = 1.6
-
-// Add integration test sources
-sourceSets {
-  integrationTest {
-    groovy {
-      compileClasspath += main.output + test.output
-      runtimeClasspath += main.output + test.output
-      srcDir file('src/integration-test/groovy')
-    }
-    resources.srcDir file('src/integration-test/resources')
+  dependencies {
+    classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.22.0'
+    classpath 'gradle.plugin.com.palantir.gradle.gitversion:gradle-git-version:0.7.3'
+    // classpath 'org.fusesource.jansi:jansi:1.16'
+    // classpath "org.jenkins-ci.plugins:job-dsl:1.63"
+    // classpath "org.jenkins-ci.plugins:job-dsl-core:1.63"
   }
 }
 
+repositories {
+  mavenCentral()
+  jcenter()
+  maven {
+    url 'https://repo.jenkins-ci.org/releases/'
+  }
+}
+
+apply plugin: 'org.jenkins-ci.jpi'
+apply plugin: 'groovy'
+apply plugin: 'com.palantir.git-version'
+
+ext {
+    jobDslVersion = '1.63'
+    jenkinsVersion = '1.651'
+    pluginVersion = gitVersion()
+}
+
+group = "org.jenkins-ci.plugins"
+version = "${pluginVersion}"
+description = "My plugin"
+
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+sourceSets {
+  jobs {
+    groovy {
+      srcDirs 'jobs'
+      compileClasspath += main.compileClasspath
+    }
+    compileClasspath += sourceSets.main.output
+    runtimeClasspath += sourceSets.main.output
+  }
+}
+
+configurations {
+  testPlugins {}
+}
+
 jenkinsPlugin {
-  coreVersion = '2.32.1'                                               // Version of Jenkins core this plugin depends on.
-  displayName = 'Pearson environment-operator deployer'
-  url = 'http://wiki.jenkins-ci.org/display/JENKINS/SomePluginPage'   // URL for plugin on Jenkins wiki or elsewhere.
-  gitHubUrl = 'https://github.com/jenkinsci/some-plugin'              // Plugin URL on GitHub. Optional.
+  coreVersion = "${jenkinsVersion}"
+  displayName = 'environment-operator-deployer-plugin'
   shortName = "environment-operator-deployer"
-
   pluginFirstClassLoader = true
-
-   // The developers section is optional, and corresponds to the POM developers section.
   developers {
     developer {
       id 'geribatai'
@@ -55,65 +72,56 @@ jenkinsPlugin {
   }
 }
 
-jacocoTestReport {
-  reports {
-    xml.enabled = true
-    html.enabled = true
-    html.destination "${buildDir}/reports/coverage"
-  }
-}
-
-task integrationTest(type: Test) {
-  testClassesDir = sourceSets.integrationTest.output.classesDir
-  classpath = sourceSets.integrationTest.runtimeClasspath
-
-  systemProperty "geb.build.reportsDir", reporting.file("$name/geb")
-  systemProperty "geb.env", "chrome"
-  outputs.upToDateWhen { false }
-}
-
-tasks.withType(Test) {
-  reports.html.destination = file("${reporting.baseDir}/${name}")
-}
-
+configurations.all*.exclude group: 'xalan'
 dependencies {
   compile 'org.codehaus.groovy:groovy-all:2.4.7'
-  compile 'org.apache.commons:commons-io:1.3.2'
   compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.2'
-	//compile 'org.jenkins-ci.plugins:job-dsl:1.61@jar'
-  //compile 'org.jenkins-ci.plugins:job-dsl-core:1.61@jar'
+  // compile "org.jenkins-ci.plugins:job-dsl-core:${jobDslVersion}"
+  compile "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}"
 
-  optionalJenkinsPlugins 'org.jenkins-ci.plugins:job-dsl:1.61@jar'
-  optionalJenkinsPlugins 'org.jenkins-ci.plugins:job-dsl-core:1.61@jar'
+  optionalJenkinsPlugins "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}@jar"
+  optionalJenkinsPlugins "org.jenkins-ci.plugins:job-dsl-core:${jobDslVersion}@jar"
 
   testCompile "org.spockframework:spock-core:1.0-groovy-2.4"
-  testCompile "org.hamcrest:hamcrest-core:1.3" // only necessary if Hamcrest matchers are used
-  testRuntime "cglib:cglib-nodep:3.1"          // allows mocking of classes (in addition to interfaces)
-  testRuntime "org.objenesis:objenesis:2.1"    // allows mocking of classes without default constructor (together with CGLIB)
-  testCompile "org.mockito:mockito-core:1.+"
+  testCompile "cglib:cglib-nodep:3.1"
 
-  integrationTestCompile "org.gebish:geb-spock:0.9.0"
-  integrationTestCompile "org.codehaus.groovy.modules.http-builder:http-builder:0.6"
-  // integrationTestCompile "org.eclipse.jgit:org.eclipse.jgit:4.6.0.201612231935-r"
-  // integrationTestCompile "com.jcraft:jsch.agentproxy.jsch:0.0.9"
-  // integrationTestCompile "com.jcraft:jsch.agentproxy.usocket-jna:0.0.9"
-  // integrationTestCompile "com.jcraft:jsch.agentproxy.sshagent:0.0.9"
+  // Jenkins test harness dependencies
+  testCompile 'org.jenkins-ci.main:jenkins-test-harness:2.22'
+  testCompile "org.jenkins-ci.main:jenkins-war:${jenkinsVersion}"
+  testCompile "org.jenkins-ci.main:jenkins-war:${jenkinsVersion}:war-for-test@jar"
 
-  integrationTestCompile 'org.codehaus.groovy:groovy-backports-compat23:2.4.5'
-
+  // Job DSL plugin including plugin dependencies
+  testCompile "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}"
+  testCompile "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}@jar"
+  testCompile 'org.jenkins-ci.plugins:structs:1.6@jar'
 }
 
-configurations {
-  integrationTestCompile.extendsFrom testCompile
-  integrationTestRuntime.extendsFrom testRuntime
+task resolveTestPlugins(type: Copy) {
+    from configurations.testPlugins
+    into new File(sourceSets.test.output.resourcesDir, 'test-dependencies')
+    include '*.hpi'
+    include '*.jpi'
+    def mapping = [:]
+
+    doFirst {
+        configurations.testPlugins.resolvedConfiguration.resolvedArtifacts.each {
+            mapping[it.file.name] = "${it.name}.${it.extension}"
+        }
+    }
+    rename { mapping[it] }
+
+    doLast {
+        List<String> baseNames = source*.name.collect { mapping[it] }.collect {
+          it[0..it.lastIndexOf('.') - 1]
+        }
+        new File(destinationDir, 'index').setText(baseNames.join('\n'), 'UTF-8')
+    }
 }
 
-compileJava {
-  options.encoding = 'UTF-8'
-  options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
-}
 
-compileGroovy {
-  options.encoding = 'UTF-8'
-  options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+test {
+  dependsOn tasks.resolveTestPlugins
+
+  inputs.files sourceSets.jobs.groovy.srcDirs
+  systemProperty 'buildDirectory', project.buildDir.absolutePath
 }

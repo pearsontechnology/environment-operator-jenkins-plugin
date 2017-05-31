@@ -18,6 +18,8 @@ import groovyx.net.http.HTTPBuilder
 import static groovyx.net.http.ContentType.*
 import static groovyx.net.http.Method.*
 
+import java.util.logging.Logger
+
 
 // EnvironmentOperatorBuilder class generates a build step in Jenkins.
 // This build step performs deploy() action against environment-operator.
@@ -36,23 +38,24 @@ class EnvironmentOperatorBuilder extends Builder {
   String version
 
   private OutputStream log
-
+  private static final Logger LOG = Logger.getLogger(EnvironmentOperatorBuilder.class.getName())
   @DataBoundConstructor
   EnvironmentOperatorBuilder(String endpoint, String token, String name, String application, String version) {
+
     this.endpoint = endpoint
     this.token = token
 
     this.application = application
     this.name = name
     this.version = version
-    this.log = System.out
+    // this.log = System.out
   }
 
   @Override
   public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
     def success = false
-    this.log = listener.getLogger()
-    log.println("${name}: deploying ${application}:${version}")
+    // this.log = listener.getLogger()
+    // log.println("${name}: deploying ${application}:${version}")
 
     // curl -XPOST -d '{"name":name, ... }' ...
     def postData = [
@@ -87,13 +90,13 @@ class EnvironmentOperatorBuilder extends Builder {
         }
 
         response.failure = { resp ->
-          log.println "POST request failed: ${resp.status} (${resp.body})"
+          // log.println "POST request failed: ${resp.status} (${resp.body})"
           return null
         }
 
       }
     } catch(e) {
-      log.println "error POST to ${url}: ${e.message}"
+      // log.println "error POST to ${url}: ${e.message}"
       return null
     }
     return retval
@@ -113,12 +116,12 @@ class EnvironmentOperatorBuilder extends Builder {
           retval = json
         }
         response.failure = { resp ->
-          log.println "GET request failed: ${resp.status} (${resp.body})"
+          // log.println "GET request failed: ${resp.status} (${resp.body})"
           return null
         }
       }
     } catch(e) {
-      log.println "error GET ${url}: ${e.message}"
+      // log.println "error GET ${url}: ${e.message}"
     }
     return retval
 
@@ -132,13 +135,13 @@ class EnvironmentOperatorBuilder extends Builder {
     while (r.status != "green" && tries < maxTries) {
       r = doGet()
       tries += 1
-      log.print "."
-      log.flush()
+      // log.print "."
+      // log.flush()
       sleep(5000)
     }
     if (tries >= maxTries) {
-      log.println "\nTimeout during deployment reached, deployment still unhealthy:\n"
-      log.print r
+      // log.println "\nTimeout during deployment reached, deployment still unhealthy:\n"
+      // log.print r
       return false
     }
     true
