@@ -10,7 +10,7 @@
     <f:textbox field="application" name="application" value="${it.application}"/>
   </f:entry>
 
-  <f:entry title="Component version version">
+  <f:entry title="Component version">
     <f:textbox field="version" name="version" value="${it.version}"/>
   </f:entry>
 
@@ -21,7 +21,7 @@
       </f:entry>
 
       <f:entry title="environment-operator authentication token">
-        <f:textbox field="token" name="token" value="${it.token}"/>
+        <f:password field="token" name="token" value="${it.token}"/>
       </f:entry>
 
     </f:advanced>

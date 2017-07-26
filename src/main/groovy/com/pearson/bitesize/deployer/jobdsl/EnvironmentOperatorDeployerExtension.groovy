@@ -12,7 +12,7 @@ import java.util.logging.Logger
 
 import com.pearson.bitesize.deployer.builder.EnvironmentOperatorBuilder
 
-@Extension
+@Extension(optional=true)
 public class EnvironmentOperatorDeployerExtension extends ContextExtensionPoint {
 
   private static final Logger LOG = Logger.getLogger(EnvironmentOperatorDeployerExtension.class.getName())
@@ -21,21 +21,18 @@ public class EnvironmentOperatorDeployerExtension extends ContextExtensionPoint 
   public Object deploy_to_environment(Runnable closure) {
     def ctx = new EnvironmentOperatorDeployerContext()
     executeInContext(closure, ctx)
-    def builder = new EnvironmentOperatorBuilder(
+    new EnvironmentOperatorBuilder(
       ctx.endpoint,
       ctx.token,
       ctx.service,
       ctx.application,
       ctx.version
     )
-    LOG.warning("WE HAVE A FUCKINg BUILDER ${builder}")
-    builder
   }
 
   @Override
   public void notifyItemCreated(Item item, DslEnvironment dslEnvironment) {
     //  notifyItemUpdated(item, dslEnvironment);
-    LOG.warning("ITEM FUCKING CREATED ${item}")
   }
 
 }

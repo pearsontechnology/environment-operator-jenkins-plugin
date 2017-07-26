@@ -12,9 +12,6 @@ buildscript {
   dependencies {
     classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.22.0'
     classpath 'gradle.plugin.com.palantir.gradle.gitversion:gradle-git-version:0.7.3'
-    // classpath 'org.fusesource.jansi:jansi:1.16'
-    // classpath "org.jenkins-ci.plugins:job-dsl:1.63"
-    // classpath "org.jenkins-ci.plugins:job-dsl-core:1.63"
   }
 }
 
@@ -74,7 +71,7 @@ jenkinsPlugin {
 
 configurations.all*.exclude group: 'xalan'
 dependencies {
-  compile 'org.codehaus.groovy:groovy-all:2.4.7'
+  compile 'org.codehaus.groovy:groovy-all:2.4.8'
   compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.2'
   // compile "org.jenkins-ci.plugins:job-dsl-core:${jobDslVersion}"
   compile "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}"
@@ -124,4 +121,8 @@ test {
 
   inputs.files sourceSets.jobs.groovy.srcDirs
   systemProperty 'buildDirectory', project.buildDir.absolutePath
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.1'
 }
