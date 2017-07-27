@@ -1,11 +1,10 @@
 package com.pearson.bitesize.deployer.builder
 
+import hudson.AbortException
 import hudson.FilePath
 import hudson.Launcher
 import hudson.Extension
 
-import hudson.model.BuildListener
-import hudson.model.AbstractBuild
 import hudson.model.Run
 import hudson.model.TaskListener
 import hudson.tasks.Builder
@@ -15,7 +14,6 @@ import org.jenkinsci.Symbol
 import org.kohsuke.stapler.DataBoundConstructor
 import org.kohsuke.stapler.DataBoundSetter
 
-import groovy.json.JsonOutput
 import groovyx.net.http.HTTPBuilder
 
 import javax.annotation.Nonnull
@@ -35,7 +33,7 @@ import java.util.logging.Logger
 //    deployed artifact version
 //    deployed artifact application (corresponds to docker image name)
 
-class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildStep {
+public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildStep {
   String endpoint
   String token
   String application
@@ -44,8 +42,14 @@ class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildStep {
 
   private OutputStream log
   private static final Logger LOG = Logger.getLogger(EnvironmentOperatorBuilder.class.getName())
+
   @DataBoundConstructor
-  EnvironmentOperatorBuilder(String endpoint, String token, String name, String application, String version) {
+  EnvironmentOperatorBuilder(
+          @Nonnull String endpoint,
+          @Nonnull String token,
+          @Nonnull String name,
+          @Nonnull String application,
+          @Nonnull String version) {
 
     this.endpoint = endpoint
     this.token = token
@@ -60,14 +64,11 @@ class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildStep {
           @Nonnull Run<?, ?> run,
           @Nonnull FilePath workspace,
           @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
-    perform((AbstractBuild)run, launcher, (BuildListener)listener)
-  }
-  @Override
-  public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
+
     def log = listener.getLogger()
-    def deployVersion = resolveParameter(build, version)
-    def deployApplication = resolveParameter(build, application)
-    def deployName = resolveParameter(build, name)
+    def deployVersion = resolveParameter(run, version)
+    def deployApplication = resolveParameter(run, application)
+    def deployName = resolveParameter(run, name)
 
     log.println("${deployName}: deploying ${deployApplication}:${deployVersion}")
     // curl -XPOST -d '{"name":name, ... }' ...
@@ -84,7 +85,9 @@ class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildStep {
     if (r && r.status == "deploying") {
       success = watchDeploy(log)
     }
-    success
+    if (!success) {
+      throw new AbortException("Deployment failed")
+    }
   }
 
   def doPost(def params, def log) {
@@ -109,7 +112,7 @@ class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildStep {
 
       }
     } catch(e) {
-      log.println "error POST to ${url}: ${e.message}"
+      log.println "POST request failed: ${e.message}"
       return null
     }
     return retval
@@ -148,8 +151,11 @@ class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildStep {
     while (r && r.status != "green" && tries < maxTries) {
       r = doGet(log)
       tries += 1
-      log.print "."
-      log.flush()
+      if (r != null) {
+        log.println "[${r.status}] Waiting for deployment to finish, ${tries} out of ${maxTries}"
+      } else {
+        return false
+      }
       sleep(5000)
     }
     if (tries >= maxTries) {
@@ -160,11 +166,11 @@ class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildStep {
     true
   }
 
-  private String  resolveParameter(AbstractBuild build, String p) {
+  private String  resolveParameter(Run run, String p) {
     def retval = p
-    if (p.startsWith('$')) {
+    if (p && p.startsWith('$')) {
       def envVar = p.substring(1)
-      retval = build.buildVariables.get(envVar)
+      retval = run.envVars.get(envVar)
     }
     retval
   }
@@ -190,16 +196,15 @@ class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildStep {
   }
 
   @DataBoundSetter
-  void setVersion(String version) {
+  void setVersion(String value) {
     this.version = value
   }
 
-
-  @Extension @Symbol("deploy_to_environment")
+  @Extension @Symbol("bitesizeDeploy")
   static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
     public DescriptorImpl() {
-      load();
+      load()
     }
 
     @Override

@@ -1,7 +1,7 @@
 job("operator test") {
   steps {
     
-    deploy_to_environment {
+    bitesizeDeploy {
       endpoint 'http://endpoint'
       token 'token'
       version '1.0'

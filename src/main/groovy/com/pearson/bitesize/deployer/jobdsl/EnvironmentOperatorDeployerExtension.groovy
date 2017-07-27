@@ -18,7 +18,7 @@ public class EnvironmentOperatorDeployerExtension extends ContextExtensionPoint 
   private static final Logger LOG = Logger.getLogger(EnvironmentOperatorDeployerExtension.class.getName())
 
   @DslExtensionMethod(context=StepContext.class)
-  public Object deploy_to_environment(Runnable closure) {
+  public Object bitesizeDeploy(Runnable closure) {
     def ctx = new EnvironmentOperatorDeployerContext()
     executeInContext(closure, ctx)
     new EnvironmentOperatorBuilder(
