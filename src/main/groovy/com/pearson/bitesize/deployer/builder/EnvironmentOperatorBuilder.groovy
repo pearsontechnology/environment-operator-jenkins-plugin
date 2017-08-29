@@ -69,9 +69,13 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
     def deployVersion = resolveParameter(run, version)
     def deployApplication = resolveParameter(run, application)
     def deployName = resolveParameter(run, name)
+    def endpoint = resolveParameter(run, endpoint)
+    def token = resolveParameter(run, token)
+
 
     log.println("${deployName}: deploying ${deployApplication}:${deployVersion}")
     // curl -XPOST -d '{"name":name, ... }' ...
+
     def postData = [
       name: deployName,
       application: deployApplication,
@@ -81,7 +85,7 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
     // def success = watchDeploy(log)
     def success = false
 
-    def r = doPost(postData, log)
+    def r = doPost(postData, endpoint, token, log)
     if (r && r.status == "deploying") {
       success = watchDeploy(log)
     }
@@ -90,7 +94,7 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
     }
   }
 
-  def doPost(def params, def log) {
+  def doPost(def params, def endpoint, def token, def log) {
 
     def retval
 
