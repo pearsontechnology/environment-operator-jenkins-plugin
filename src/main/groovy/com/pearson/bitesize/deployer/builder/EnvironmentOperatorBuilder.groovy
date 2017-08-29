@@ -86,13 +86,7 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
       success = watchDeploy(log)
     }
     if (!success) {
-      r = doGet(log, "pods")
-      log.println("${r.pods}")
       throw new AbortException("Deployment failed")
-    }
-    else{
-      r = doGet(log, "pods")
-      log.println("${r.pods}")
     }
   }
 
@@ -124,17 +118,10 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
     return retval
   }
 
-  def doGet(def log, def type) {
+  def doGet(def log) {
     def retval = [ status: "red" ]
 
-    if (type == "pods") {
-      def url = "${endpoint}/status/${name}/pods"
-    }
-    else{
-      def url = "${endpoint}/status/${name}"
-    }
-
-
+    def url = "${endpoint}/status/${name}"
     def http = new HTTPBuilder(url)
 
     try {
@@ -162,7 +149,7 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
     def maxTries = 60 // timeout = 5 mins
 
     while (r && r.status != "green" && tries < maxTries) {
-      r = doGet(log, "service")
+      r = doGet(log)
       tries += 1
       if (r != null) {
         log.println "[${r.status}] Waiting for deployment to finish, ${tries} out of ${maxTries}"
