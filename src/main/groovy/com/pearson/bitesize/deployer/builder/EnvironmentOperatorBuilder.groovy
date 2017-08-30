@@ -4,7 +4,7 @@ import hudson.AbortException
 import hudson.FilePath
 import hudson.Launcher
 import hudson.Extension
-
+import static groovy.json.JsonOutput.*
 import hudson.model.Run
 import hudson.model.TaskListener
 import hudson.tasks.Builder
@@ -69,8 +69,6 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
     def deployVersion = resolveParameter(run, version)
     def deployApplication = resolveParameter(run, application)
     def deployName = resolveParameter(run, name)
-    def endpoint = resolveParameter(run, endpoint)
-    def token = resolveParameter(run, token)
 
 
     log.println("${deployName}: deploying ${deployApplication}:${deployVersion}")
@@ -85,22 +83,26 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
     // def success = watchDeploy(log)
     def success = false
 
-    def r = doPost(postData, endpoint, token, log)
+    def r = doPost(postData, log)
     if (r && r.status == "deploying") {
       success = watchDeploy(log)
     }
     if (!success) {
       r = doGet(log, "pods")
-      log.println("${r.pods}")
+      log.println("----------- Start Pod Logs -------------")
+      log.println(prettyPrint(toJson(r.pods)))
+      log.println("----------- End Pod Logs -------------")
       throw new AbortException("Deployment failed")
     }
     else{
       r = doGet(log, "pods")
-      log.println("${r.pods}")
+      log.println("----------- Start Pod Logs -------------")
+      log.println(prettyPrint(toJson(r.pods)))
+      log.println("----------- End Pod Logs -------------")
     }
   }
 
-  def doPost(def params, def endpoint, def token, def log) {
+  def doPost(def params, def log) {
 
     def retval
 
@@ -130,12 +132,12 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
 
   def doGet(def log, def type) {
     def retval = [ status: "red" ]
-
+    def url = ""
     if (type == "pods") {
-      def url = "${endpoint}/status/${name}/pods"
+        url = "${endpoint}/status/${name}/pods"
     }
     else{
-      def url = "${endpoint}/status/${name}"
+        url = "${endpoint}/status/${name}"
     }
 
 
