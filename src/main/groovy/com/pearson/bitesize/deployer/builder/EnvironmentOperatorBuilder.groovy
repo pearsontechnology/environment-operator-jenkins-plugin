@@ -87,14 +87,14 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
     if (r && r.status == "deploying") {
       success = watchDeploy(log, deployName)
     }
+
+    r = doGet(log, "status/${deployName}/pods")
+    log.println("----------- Start Pod Logs -------------")
+    log.println(prettyPrint(toJson(r.pods)))
+    log.println("----------- End Pod Logs -------------")
+
     if (!success) {
       throw new AbortException("Deployment failed")
-    }
-    else{
-      r = doGet(log, "status/${deployName}/pods")
-      log.println("----------- Start Pod Logs -------------")
-      log.println(prettyPrint(toJson(r.pods)))
-      log.println("----------- End Pod Logs -------------")
     }
   }
 
