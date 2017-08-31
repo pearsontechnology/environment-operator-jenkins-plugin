@@ -37,7 +37,7 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
   String endpoint
   String token
   String application
-  String name
+  String serviceName
   String version
 
   private OutputStream log
@@ -47,7 +47,7 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
   EnvironmentOperatorBuilder(
           @Nonnull String endpoint,
           @Nonnull String token,
-          @Nonnull String name,
+          @Nonnull String serviceName,
           @Nonnull String application,
           @Nonnull String version) {
 
@@ -55,7 +55,7 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
     this.token = token
 
     this.application = application
-    this.name = name
+    this.serviceName = serviceName
     this.version = version
   }
 
@@ -68,7 +68,7 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
     def log = listener.getLogger()
     def deployVersion = resolveParameter(run, version)
     def deployApplication = resolveParameter(run, application)
-    def deployName = resolveParameter(run, name)
+    def deployName = resolveParameter(run, serviceName)
 
     log.println("${deployName}: deploying ${deployApplication}:${deployVersion}")
     // curl -XPOST -d '{"name":name, ... }' ...
@@ -121,7 +121,7 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
   def doGet(def log) {
     def retval = [ status: "red" ]
 
-    def url = "${endpoint}/status/${name}"
+    def url = "${endpoint}/status/${serviceName}"
     def http = new HTTPBuilder(url)
 
     try {
@@ -191,8 +191,8 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
   }
 
   @DataBoundSetter
-  void setName(String value) {
-    this.name = value
+  void setServiceName(String value) {
+    this.serviceName = value
   }
 
   @DataBoundSetter

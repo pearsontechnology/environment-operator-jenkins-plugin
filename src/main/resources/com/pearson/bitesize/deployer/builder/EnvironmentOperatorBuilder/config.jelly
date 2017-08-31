@@ -3,7 +3,7 @@
 
 
   <f:entry name="type" title="Service">
-      <f:textbox field="name" name="name" value="${it.name}"/>
+      <f:textbox field="serviceName" name="serviceName" value="${it.serviceName}"/>
   </f:entry>
 
   <f:entry title="Component name">
