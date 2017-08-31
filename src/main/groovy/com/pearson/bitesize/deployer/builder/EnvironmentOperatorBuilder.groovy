@@ -85,17 +85,13 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
 
     def r = doPost(postData, log)
     if (r && r.status == "deploying") {
-      success = watchDeploy(log)
+      success = watchDeploy(log, deployName)
     }
     if (!success) {
-      r = doGet(log, "pods")
-      log.println("----------- Start Pod Logs -------------")
-      log.println(prettyPrint(toJson(r.pods)))
-      log.println("----------- End Pod Logs -------------")
       throw new AbortException("Deployment failed")
     }
     else{
-      r = doGet(log, "pods")
+      r = doGet(log, "status/${deployName}/pods")
       log.println("----------- Start Pod Logs -------------")
       log.println(prettyPrint(toJson(r.pods)))
       log.println("----------- End Pod Logs -------------")
@@ -130,16 +126,9 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
     return retval
   }
 
-  def doGet(def log, def type) {
+  def doGet(def log, def uri) {
     def retval = [ status: "red" ]
-    def url = ""
-    if (type == "pods") {
-        url = "${endpoint}/status/${serviceName}/pods"
-    }
-    else{
-        url = "${endpoint}/status/${serviceName}"
-    }
-
+    def url = "${endpoint}/${uri}"
 
     def http = new HTTPBuilder(url)
 
@@ -162,13 +151,13 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
 
   }
 
-  def watchDeploy(def log) {
+  def watchDeploy(def log, def serviceName) {
     def r = [ status: "red" ]
     def tries = 0
     def maxTries = 60 // timeout = 5 mins
 
     while (r && r.status != "green" && tries < maxTries) {
-      r = doGet(log, "service")
+      r = doGet(log, "status/${serviceName}")
       tries += 1
       if (r != null) {
         log.println "[${r.status}] Waiting for deployment to finish, ${tries} out of ${maxTries}"
