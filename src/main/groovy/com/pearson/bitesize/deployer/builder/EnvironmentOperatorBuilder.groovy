@@ -4,7 +4,7 @@ import hudson.AbortException
 import hudson.FilePath
 import hudson.Launcher
 import hudson.Extension
-
+import static groovy.json.JsonOutput.*
 import hudson.model.Run
 import hudson.model.TaskListener
 import hudson.tasks.Builder
@@ -70,8 +70,10 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
     def deployApplication = resolveParameter(run, application)
     def deployName = resolveParameter(run, serviceName)
 
+
     log.println("${deployName}: deploying ${deployApplication}:${deployVersion}")
     // curl -XPOST -d '{"name":name, ... }' ...
+
     def postData = [
       name: deployName,
       application: deployApplication,
@@ -86,7 +88,17 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
       success = watchDeploy(log)
     }
     if (!success) {
+      r = doGet(log, "pods")
+      log.println("----------- Start Pod Logs -------------")
+      log.println(prettyPrint(toJson(r.pods)))
+      log.println("----------- End Pod Logs -------------")
       throw new AbortException("Deployment failed")
+    }
+    else{
+      r = doGet(log, "pods")
+      log.println("----------- Start Pod Logs -------------")
+      log.println(prettyPrint(toJson(r.pods)))
+      log.println("----------- End Pod Logs -------------")
     }
   }
 
@@ -118,10 +130,17 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
     return retval
   }
 
-  def doGet(def log) {
+  def doGet(def log, def type) {
     def retval = [ status: "red" ]
+    def url = ""
+    if (type == "pods") {
+        url = "${endpoint}/status/${serviceName}/pods"
+    }
+    else{
+        url = "${endpoint}/status/${serviceName}"
+    }
 
-    def url = "${endpoint}/status/${serviceName}"
+
     def http = new HTTPBuilder(url)
 
     try {
@@ -149,7 +168,7 @@ public class EnvironmentOperatorBuilder extends Builder  implements SimpleBuildS
     def maxTries = 60 // timeout = 5 mins
 
     while (r && r.status != "green" && tries < maxTries) {
-      r = doGet(log)
+      r = doGet(log, "service")
       tries += 1
       if (r != null) {
         log.println "[${r.status}] Waiting for deployment to finish, ${tries} out of ${maxTries}"
