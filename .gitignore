@@ -7,7 +7,6 @@ build/
 .settings/
 .idea/
 *.iml
-gradle/
 
 
 travis/jenkins/*

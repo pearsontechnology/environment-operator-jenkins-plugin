@@ -20,7 +20,7 @@ src_test:  ## Execs any IDEMPOTENT actions that need to occur before building th
 
 test:  ## Execs into the container, and runs inspec tests
 	@echo "Wait for jenkins"
-	bash -c 'while [[ "$$(curl -s -o /dev/null -w ''%{http_code}'' localhost:8080/api/json)" != "200" ]]; do sleep 5; done'
+	bash -c 'while [[ "$$(curl -s -o /dev/null -w ''%{http_code}'' localhost:8080/api/json)" != "200" ]]; do echo "waiting.." && sleep 5; done'
 	@echo "Running Tests"
 	bash -c "inspec exec test/inspec -t docker://$(IMAGE)"
 
