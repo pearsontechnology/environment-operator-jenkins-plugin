@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# WARNING: This file is deployed from template. Raise a pull request against ansible-template to change.
-
 set -e
 set -x
 # Requires Travis CLI and AWS CLI tools
@@ -18,7 +16,7 @@ decrypt=$(travis encrypt-file credentials --no-interactive --print-key --force |
 cat<<EOF >decrypt.sh
 #!/usr/bin/env bash
 
-# WARNING: This file is deployed from template. Raise a pull request against ansible-template to change.
+# WARNING: This file is deployed from template. Raise a pull request against image-template to change.
 
 set -e
 set -x
@@ -26,5 +24,5 @@ set -x
 mkdir ~/.aws
 ${decrypt}
 EOF
-
+chmod +x decrypt.sh
 rm credentials

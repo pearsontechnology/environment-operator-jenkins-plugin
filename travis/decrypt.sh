@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# WARNING: This file is deployed from template. Raise a pull request against ansible-template to change.
+# WARNING: This file is deployed from template. Raise a pull request against image-template to change.
 
 set -e
 set -x
