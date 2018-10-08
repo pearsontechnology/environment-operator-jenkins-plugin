@@ -1,0 +1,4 @@
+name: couchbase-monitor
+title: InSpec tests for couchbase-monitor repo
+maintainer: udaya.balagalla@pearson.com
+version: 1.0.0

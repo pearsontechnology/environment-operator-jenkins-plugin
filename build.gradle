@@ -1,26 +1,26 @@
 buildscript {
-  repositories {
-    jcenter()
-      maven {
-        url 'http://repo.jenkins-ci.org/releases/'
-      }
-      maven {
-        url "https://plugins.gradle.org/m2/"
-      }
-  }
+    repositories {
+        jcenter()
+        maven {
+            url 'http://repo.jenkins-ci.org/releases/'
+        }
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
 
-  dependencies {
-    classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.22.0'
-    classpath 'gradle.plugin.com.palantir.gradle.gitversion:gradle-git-version:0.7.3'
-  }
+    dependencies {
+        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.27.0'
+        classpath 'gradle.plugin.com.palantir.gradle.gitversion:gradle-git-version:0.11.0'
+    }
 }
 
 repositories {
-  mavenCentral()
-  jcenter()
-  maven {
-    url 'https://repo.jenkins-ci.org/releases/'
-  }
+    mavenCentral()
+    jcenter()
+    maven {
+        url 'https://repo.jenkins-ci.org/releases/'
+    }
 }
 
 apply plugin: 'org.jenkins-ci.jpi'
@@ -28,74 +28,71 @@ apply plugin: 'groovy'
 apply plugin: 'com.palantir.git-version'
 
 ext {
-    jobDslVersion = '1.63'
-    jenkinsVersion = '1.651'
+    jobDslVersion = '1.66'
+    jenkinsVersion = '2.138.1'
     pluginVersion = gitVersion()
 }
 
 group = "org.jenkins-ci.plugins"
 version = "${pluginVersion}"
-description = "My plugin"
+description = "Environment Operator Jenkins Plugin"
 
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 sourceSets {
-  jobs {
-    groovy {
-      srcDirs 'jobs'
-      compileClasspath += main.compileClasspath
+    jobs {
+        groovy {
+            srcDirs 'jobs'
+            compileClasspath += main.compileClasspath
+        }
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
     }
-    compileClasspath += sourceSets.main.output
-    runtimeClasspath += sourceSets.main.output
-  }
 }
 
 configurations {
-  testPlugins {}
+    testPlugins {}
 }
 
 jenkinsPlugin {
-  coreVersion = "${jenkinsVersion}"
-  displayName = 'environment-operator-deployer-plugin'
-  shortName = "environment-operator-deployer"
-  pluginFirstClassLoader = true
-  developers {
-    developer {
-      id 'geribatai'
-      name 'Simas Cepaitis'
-      email 'simas.cepaitis@snc.lt'
+    coreVersion = "${jenkinsVersion}"
+    displayName = 'Environment Operator Deployer'
+    shortName = "environment-operator-deployer"
+    pluginFirstClassLoader = true
+    developers {
+        developer {
+            id 'geribatai'
+            name 'Simas Cepaitis'
+            email 'simas.cepaitis@snc.lt'
+        }
     }
-  }
 }
 
 configurations.all*.exclude group: 'xalan'
 dependencies {
-  compile 'org.codehaus.groovy:groovy-all:2.4.11'
-  compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.2'
-  // compile "org.jenkins-ci.plugins:job-dsl-core:${jobDslVersion}"
-  compile "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}"
-  compile "org.jenkins-ci.plugins:structs:1.4"
+    compile 'org.codehaus.groovy:groovy-all:2.5.2'
+    compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.2'
+    compile "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}"
+    compile "org.jenkins-ci.plugins:structs:1.10"
 
-  optionalJenkinsPlugins "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}@jar"
-  optionalJenkinsPlugins "org.jenkins-ci.plugins:job-dsl-core:${jobDslVersion}@jar"
+    optionalJenkinsPlugins "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}@jar"
+    optionalJenkinsPlugins "org.jenkins-ci.plugins:job-dsl-core:${jobDslVersion}@jar"
 
-  jenkinsPlugins "org.jenkins-ci.plugins:structs:1.4@jar"
+    jenkinsPlugins "org.jenkins-ci.plugins:structs:1.7@jar"
 
-  testCompile "org.spockframework:spock-core:1.0-groovy-2.4"
-  testCompile "cglib:cglib-nodep:3.1"
+    testCompile "org.spockframework:spock-core:1.2-groovy-2.5"
+    testCompile "cglib:cglib-nodep:3.2.8"
 
-  // Jenkins test harness dependencies
-  testCompile 'org.jenkins-ci.main:jenkins-test-harness:2.22'
-  testCompile "org.jenkins-ci.main:jenkins-war:${jenkinsVersion}"
-  testCompile "org.jenkins-ci.main:jenkins-war:${jenkinsVersion}:war-for-test@jar"
+    // Jenkins test harness dependencies
+    testCompile 'org.jenkins-ci.main:jenkins-test-harness:2.43'
+    testCompile "org.jenkins-ci.main:jenkins-war:${jenkinsVersion}"
 
-  // Job DSL plugin including plugin dependencies
-  testCompile "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}"
-  testCompile "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}@jar"
-  testCompile 'org.jenkins-ci.plugins:structs:1.6@jar'
-  testCompile "org.jenkins-ci.plugins:structs:1.4"
-  testCompile "org.jenkins-ci.plugins:structs:1.4@jar"
+    // Job DSL plugin including plugin dependencies
+    testCompile "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}"
+    testCompile "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}@jar"
+    testCompile "org.jenkins-ci.plugins:structs:1.10"
+    testCompile "org.jenkins-ci.plugins:structs:1.10@jar"
 }
 
 task resolveTestPlugins(type: Copy) {
@@ -114,7 +111,7 @@ task resolveTestPlugins(type: Copy) {
 
     doLast {
         List<String> baseNames = source*.name.collect { mapping[it] }.collect {
-          it[0..it.lastIndexOf('.') - 1]
+            it[0..it.lastIndexOf('.') - 1]
         }
         new File(destinationDir, 'index').setText(baseNames.join('\n'), 'UTF-8')
     }
@@ -122,12 +119,12 @@ task resolveTestPlugins(type: Copy) {
 
 
 test {
-  dependsOn tasks.resolveTestPlugins
+    dependsOn tasks.resolveTestPlugins
 
-  inputs.files sourceSets.jobs.groovy.srcDirs
-  systemProperty 'buildDirectory', project.buildDir.absolutePath
+    inputs.files sourceSets.jobs.groovy.srcDirs
+    systemProperty 'buildDirectory', project.buildDir.absolutePath
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '3.1'
+    gradleVersion = '4.10.2'
 }
