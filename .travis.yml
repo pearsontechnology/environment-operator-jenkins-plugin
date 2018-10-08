@@ -22,7 +22,7 @@ install:
 - git remote set-url origin git@github.com:pearsontechnology/${REPO_NAME}.git
 
 script:
-- if test $TRAVIS_PULL_REQUEST != "false" ; then make; fi
+- if test $TRAVIS_PULL_REQUEST != "false" ; then gradle wrapper && make; fi
 
 after_success:
 - if test $TRAVIS_PULL_REQUEST = "false" && test $TRAVIS_BRANCH = "master" ; then
