@@ -9,9 +9,8 @@ services:
      volumes:
         - /var/run/docker.sock:/var/run/docker.sock
         - ./travis/script:/script
-        - ./travis/jenkins:/var/jenkins_home
      environment:
         - JAVA_OPTS="-Djava.awt.headless=true"
      ports:
-        - "0.0.0.0:50000:50000"
-        - "0.0.0.0:8080:8080"
+        - "127.0.0.1:50000:50000"
+        - "127.0.0.1:8080:8080"

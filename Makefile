@@ -20,7 +20,7 @@ src_test:  ## Execs any IDEMPOTENT actions that need to occur before building th
 
 test:  ## Execs into the container, and runs inspec tests
 	@echo "Wait for jenkins"
-	bash -c 'sleep 20'
+	bash -c "sleep 30"
 	@echo "Running Tests"
 	bash -c "inspec exec test/inspec -t docker://$(IMAGE)"
 
