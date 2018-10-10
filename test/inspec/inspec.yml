@@ -1,0 +1,4 @@
+name: environment-operator-jenkins-plugin
+title: InSpec tests for environment-operator-jenkins-plugin repo
+maintainer: udaya.balagalla@pearson.com
+version: 1.0.0

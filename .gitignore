@@ -7,4 +7,9 @@ build/
 .settings/
 .idea/
 *.iml
-gradle/
+
+
+travis/jenkins/*
+
+# Mac Junk
+.DS_Store

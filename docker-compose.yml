@@ -1,0 +1,16 @@
+
+version: '2'
+
+services:
+  environment-operator-jenkins-plugin:
+     build: .
+     container_name: "environment-operator-jenkins-plugin"
+     hostname: "environment-operator-jenkins-plugin"
+     volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - ./travis/script:/script
+     environment:
+        - JAVA_OPTS="-Djava.awt.headless=true"
+     ports:
+        - "127.0.0.1:50000:50000"
+        - "127.0.0.1:8080:8080"

@@ -1,0 +1,42 @@
+sudo: false
+language: java
+dist: trusty
+
+jdk:
+  - oraclejdk8
+
+env:
+  global:
+  - REPO_NAME=$(echo ${TRAVIS_REPO_SLUG#*/})
+
+services:
+- docker
+
+before_install:
+- (cd ${TRAVIS_BUILD_DIR}/travis && ./decrypt.sh && cp ${TRAVIS_BUILD_DIR}/travis/credentials ~/.aws)
+
+install:
+- curl https://omnitruck.chef.io/install.sh | sudo bash -s -- -P inspec
+- wget https://github.com/grammarly/rocker/releases/download/1.3.1/rocker-1.3.1-linux_amd64.tar.gz && tar -xzf rocker-1.3.1-linux_amd64.tar.gz && mv rocker /home/travis/bin/rocker && chmod +x /home/travis/bin/rocker
+- wget https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 -O /home/travis/bin/jq && chmod +x /home/travis/bin/jq
+- pip install --user awscli docker-compose
+- aws ssm get-parameters --names "github_rw_key" --region eu-west-1 --with-decryption | jq -r ".Parameters[0].Value" > ~/.ssh/id_rsa
+- echo -e "Host *\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+- chmod 600 ~/.ssh/id_rsa && eval `ssh-agent -s` && ssh-add ~/.ssh/id_rsa
+- git remote set-url origin git@github.com:pearsontechnology/${REPO_NAME}.git
+
+script:
+- if test $TRAVIS_PULL_REQUEST != "false" ; then make; fi
+
+after_success:
+- if test $TRAVIS_PULL_REQUEST = "false" && test $TRAVIS_BRANCH = "master" ; then
+  ${TRAVIS_BUILD_DIR}/travis/version.sh ; fi
+
+notifications:
+  slack:
+    rooms:
+    - pearsoncloudplatforms:JLhlGFXPgP1xw0aYeOq9Pwsk#build-bitesize
+
+branches:
+  only:
+  - master
